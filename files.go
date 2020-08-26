@@ -39,7 +39,13 @@ func (d Directory) Walk(step func(name string, tplType TemplateType) error) erro
         } else if extension := filepath.Ext(path); extension != d.Extension {
             return nil
         }
-        return step(strings.TrimSuffix(path, d.Extension), d.TemplateTypeOf(path))
+        rel, err := filepath.Rel(d.Path, path)
+        if err != nil {
+            return err
+        }
+        name := strings.TrimSuffix(rel, d.Extension)
+        tplType := d.TemplateTypeOf(name)
+        return step(name, tplType)
     })
     return err
 }
