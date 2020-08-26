@@ -25,12 +25,12 @@ func loadTemplate(fc FileCollection, name string) (data tpldata, err error) {
     }
 
     if match := reExtend.FindIndex(content); match != nil {
-        data.extends = parseDependencies(string(content[match[0]:match[1]]))
+        data.extends = parseDependencies(strings.TrimSpace(string(content[match[0]:match[1]])))
         content = append(content[:match[0]], content[match[1]:]...)
     }
 
     if match := reInclude.FindIndex(content); match != nil {
-        data.includes = parseDependencies(string(content[match[0]:match[1]]))
+        data.includes = parseDependencies(strings.TrimSpace(string(content[match[0]:match[1]])))
         content = append(content[:match[0]], content[match[1]:]...)
     }
 
