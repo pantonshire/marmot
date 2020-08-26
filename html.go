@@ -14,6 +14,13 @@ type HTMLCache struct {
     funcs     template.FuncMap
 }
 
+func HTML() *HTMLCache {
+    return &HTMLCache{
+        templates: make(map[string]*template.Template),
+        funcs:     make(template.FuncMap),
+    }
+}
+
 func (c *HTMLCache) Load(fc FileCollection) error {
     c.lock.Lock()
     defer c.lock.Unlock()
