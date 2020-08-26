@@ -13,9 +13,8 @@ type tpldata struct {
 }
 
 var (
-    //(?s){{\s*extend\s+"([^"\\]|\\.)*"\s*}}
-    reExtend  = regexp.MustCompile(`(?s){{\s*extend(\s[^{}]*}}|}})`)
-    reInclude = regexp.MustCompile(`(?s){{\s*include(\s[^{}]*}}|}})`)
+    reExtend  = regexp.MustCompile(`(?s){{\s*extend(\s[^{}]*}}|}})(\s*(\r\n|\r|\n))*`)
+    reInclude = regexp.MustCompile(`(?s){{\s*include(\s[^{}]*}}|}})(\s*(\r\n|\r|\n))*`)
     reString  = regexp.MustCompile(`"([^"\\]|\\.)*"`)
 )
 
