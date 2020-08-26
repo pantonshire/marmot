@@ -1,0 +1,6 @@
+{{extend "base"}}
+{{include "foo baa"}}
+{{define "content" -}}
+    <p>{{template "foo"}}</p>
+    <p>{{template "baa"}}</p>
+{{- end}}
