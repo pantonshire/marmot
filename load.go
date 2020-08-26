@@ -13,8 +13,10 @@ type tpldata struct {
 }
 
 var (
-    reExtend  = regexp.MustCompile(`(?s){{\s*extend\s[^{}]*}}`)
-    reInclude = regexp.MustCompile(`(?s){{\s*include\s[^{}]*}}`)
+    //(?s){{\s*extend\s+"([^"\\]|\\.)*"\s*}}
+    reExtend  = regexp.MustCompile(`(?s){{\s*extend(\s[^{}]*}}|}})`)
+    reInclude = regexp.MustCompile(`(?s){{\s*include(\s[^{}]*}}|}})`)
+    reString  = regexp.MustCompile(`"([^"\\]|\\.)*"`)
 )
 
 func loadTemplate(fc FileCollection, name string) (data tpldata, err error) {
@@ -39,5 +41,11 @@ func loadTemplate(fc FileCollection, name string) (data tpldata, err error) {
 }
 
 func parseDependencies(dependencyStatement string) []string {
-    return strings.Fields(dependencyStatement[2 : len(dependencyStatement)-2])[1:]
+    var dependencies []string
+    for _, str := range reString.FindAllString(dependencyStatement, -1) {
+        if len(str) >= 2 {
+            dependencies = append(dependencies, strings.Fields(str[1 : len(str)-1])...)
+        }
+    }
+    return dependencies
 }
