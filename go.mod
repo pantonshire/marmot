@@ -1,1 +1,3 @@
-module "marmot"
+module marmot
+
+go 1.14
