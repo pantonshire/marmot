@@ -17,8 +17,8 @@ var (
     reInclude = regexp.MustCompile(`(?s){{\s*include\s[^{}]*}}`)
 )
 
-func loadTemplate(path string) (data tpldata, err error) {
-    content, err := ioutil.ReadFile(path)
+func loadTemplate(fc FileCollection, name string) (data tpldata, err error) {
+    content, err := ioutil.ReadFile(fc.Find(name))
     if err != nil {
         return data, err
     }
