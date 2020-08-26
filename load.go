@@ -49,3 +49,69 @@ func parseDependencies(dependencyStatement string) []string {
     }
     return dependencies
 }
+
+func recurseTemplates(fc FileCollection, data map[string]*tpldata, name string) (map[string]*tpldata, error) {
+    if _, ok := data[name]; ok {
+        return data, nil
+    }
+
+    tplData, err := loadTemplate(fc, name)
+    if err != nil {
+        return data, err
+    }
+
+    data[name] = &tplData
+
+    dependencies := make(map[string]bool)
+    var extends, includes []string
+
+    for _, parent := range tplData.extends {
+        data, err = recurseTemplates(fc, data, parent)
+        if err != nil {
+            return data, err
+        }
+
+        for _, dep := range data[parent].extends {
+            if !dependencies[dep] {
+                extends, dependencies[dep] = append(extends, dep), true
+            }
+        }
+
+        if !dependencies[parent] {
+            extends, dependencies[parent] = append(extends, parent), true
+        }
+
+        for _, dep := range data[parent].includes {
+            if !dependencies[dep] {
+                extends, dependencies[dep] = append(extends, dep), true
+            }
+        }
+    }
+
+    for _, included := range tplData.includes {
+        data, err = recurseTemplates(fc, data, included)
+        if err != nil {
+            return data, err
+        }
+
+        for _, dep := range data[included].extends {
+            if !dependencies[dep] {
+                includes, dependencies[dep] = append(includes, dep), true
+            }
+        }
+
+        if !dependencies[included] {
+            includes, dependencies[included] = append(includes, included), true
+        }
+
+        for _, dep := range data[included].includes {
+            if !dependencies[dep] {
+                includes, dependencies[dep] = append(includes, dep), true
+            }
+        }
+    }
+
+    tplData.extends, tplData.includes = extends, includes
+
+    return data, err
+}
