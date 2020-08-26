@@ -19,7 +19,8 @@ func TestHTML(t *testing.T) {
 </body>
 </html>`)
 
-    var cache HTMLCache
+    cache := HTML()
+
     if err := cache.Load(Directory{Path: "testdata/html", Extension: ".gohtml"}); err != nil {
         t.Error(err)
     }
