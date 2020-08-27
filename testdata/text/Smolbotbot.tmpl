@@ -1,0 +1,6 @@
+{{extend "base"}}
+{{include "greeting"}}
+
+{{define "message" -}}
+    The small robot of the day is {{.Robot}}. 1 + 1 = {{add 1 1}}
+{{- end}}
