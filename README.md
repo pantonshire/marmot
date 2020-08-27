@@ -13,7 +13,7 @@ import (
 func main() {
   cache := marmot.HTML()
   
-  //Used to load all of the templates in templates/ with the extension .gohtml
+  //Used to load all of the templates in the directory templates/ with the extension .gohtml
   templateDir := marmot.Directory{
     Path:      "templates",
     Extension: ".gohtml",
