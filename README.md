@@ -23,7 +23,12 @@ func main() {
     panic(err)
   }
   
-  builder := cache.Builder("mytemplate").With("Answer", 42).With("ProductName", "Sandwich")
+  //Access a template "templates/MyTemplate.gohtml"
+  //The template must be exported (the first character of the file name is a capital letter)
+  builder := cache.Builder("mytemplate")
+  
+  //The values can be accessed inside the template as {{$.Answer}} and {{$.ProductName}}
+  builder.With("Answer", 42).With("ProductName", "Sandwich")
   
   str, err := builder.ExecStr()
   if err != nil {
