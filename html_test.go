@@ -1,13 +1,13 @@
 package marmot
 
 import (
-    "fmt"
-    "strings"
-    "testing"
+  "fmt"
+  "strings"
+  "testing"
 )
 
 func TestHTML(t *testing.T) {
-    expect := strings.TrimSpace(`
+  expect := strings.TrimSpace(`
 <html lang="en">
 <head>
     <title>Test</title>
@@ -19,20 +19,20 @@ func TestHTML(t *testing.T) {
 </body>
 </html>`)
 
-    cache := HTML()
+  cache := HTML()
 
-    if err := cache.Load(Directory{Path: "testdata/html", Extension: ".gohtml"}); err != nil {
-        t.Error(err)
-    }
+  if err := cache.Load(Directory{Path: "testdata/html", Extension: ".gohtml"}); err != nil {
+    t.Error(err)
+  }
 
-    str, err := cache.Builder("Page").ExecStr()
-    if err != nil {
-        t.Error(err)
-    }
+  str, err := cache.Builder("Page").ExecStr()
+  if err != nil {
+    t.Error(err)
+  }
 
-    fmt.Println(str)
+  fmt.Println(str)
 
-    if strings.TrimSpace(str) != expect {
-        t.Error("incorrect html output")
-    }
+  if strings.TrimSpace(str) != expect {
+    t.Error("incorrect html output")
+  }
 }
