@@ -13,10 +13,8 @@ import (
 func main() {
   cache := marmot.HTML()
   
-  //Used to load all of the templates in the directory templates/ with the extension .gohtml
-  templateDir := marmot.DirExtensions("templates", "gohtml")
-  
-  if err := cache.Load(templateDir); err != nil {
+  //Load all of the templates in the directory templates/ with the extension .gohtml
+  if err := cache.Load(marmot.DirExtensions("templates", "gohtml")); err != nil {
     panic(err)
   }
   
