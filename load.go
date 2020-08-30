@@ -1,7 +1,6 @@
 package marmot
 
 import (
-  "io/ioutil"
   "regexp"
   "strings"
 )
@@ -18,8 +17,8 @@ var (
   reString  = regexp.MustCompile(`"([^"\\]|\\.)*"`)
 )
 
-func loadTemplate(fc FileCollection, name string) (data tpldata, err error) {
-  content, err := ioutil.ReadFile(fc.Find(name))
+func loadTemplate(fc ResolvedFileCollection, name string) (data tpldata, err error) {
+  content, err := fc.Read(name)
   if err != nil {
     return data, err
   }
@@ -49,7 +48,7 @@ func parseDependencies(dependencyStatement string) []string {
   return dependencies
 }
 
-func recurseTemplates(fc FileCollection, data map[string]*tpldata, name string) (map[string]*tpldata, error) {
+func recurseTemplates(fc ResolvedFileCollection, data map[string]*tpldata, name string) (map[string]*tpldata, error) {
   if _, ok := data[name]; ok {
     return data, nil
   }

@@ -56,12 +56,18 @@ func (c *TextCache) load(fc FileCollection) error {
 
   data := make(map[string]*tpldata)
 
-  return fc.Walk(func(name string, tplType TemplateType) error {
-    if tplType != ContentType {
+  files, err := fc.Resolve()
+  if err != nil {
+    return err
+  }
+
+  for _, name := range files.Names {
+    path := files.Paths[name]
+    if tplType := files.TemplateTypeOf(path); tplType != ContentType {
       return nil
     }
 
-    data, err := recurseTemplates(fc, data, name)
+    data, err := recurseTemplates(files, data, name)
     if err != nil {
       return err
     }
@@ -102,7 +108,7 @@ func (c *TextCache) load(fc FileCollection) error {
     }
 
     c.templates[strings.ToLower(name)] = tpl
+  }
 
-    return nil
-  })
+  return nil
 }

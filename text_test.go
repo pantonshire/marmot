@@ -11,7 +11,7 @@ func TestText(t *testing.T) {
   cache := Text()
   cache.Functions(Std())
 
-  if err := cache.Load(Directory{Path: "testdata/text", Extension: ".tmpl"}); err != nil {
+  if err := cache.Load(DirExtensions("testdata/text", "tmpl")); err != nil {
     t.Error(err)
   }
 
@@ -26,6 +26,6 @@ func TestText(t *testing.T) {
   }
 
   if strings.TrimSpace(str) != expect {
-    t.Error("incorrect html output")
+    t.Error("incorrect text output")
   }
 }
