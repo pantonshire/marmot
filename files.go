@@ -108,26 +108,6 @@ func (d Directory) Resolve() (ResolvedFileCollection, error) {
   }, err
 }
 
-//func (d Directory) Walk(step func(name string, tplType TemplateType) error) error {
-//  err := filepath.Walk(d.Path, func(path string, info os.FileInfo, err error) error {
-//    if err != nil {
-//      return err
-//    } else if info == nil || info.IsDir() {
-//      return nil
-//    } else if extension := filepath.Ext(path); extension != d.Extension {
-//      return nil
-//    }
-//    rel, err := filepath.Rel(d.Path, path)
-//    if err != nil {
-//      return err
-//    }
-//    name := strings.TrimSuffix(rel, d.Extension)
-//    tplType := d.TemplateTypeOf(name)
-//    return step(name, tplType)
-//  })
-//  return err
-//}
-
 func (d Directory) TemplateTypeOf(path string) TemplateType {
   if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
     return ContentType
