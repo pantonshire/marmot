@@ -52,61 +52,31 @@ func (c *textCache) lookup(key string) (*template.Template, bool) {
 }
 
 func (c *textCache) load(fc FileCollection) error {
-  c.templates = make(map[string]*template.Template)
-
-  data := make(map[string]*tpldata)
-
-  files, err := fc.Resolve()
+  tcs, err := createTemplates(fc, textTemplateCreator{}, c.funcs)
   if err != nil {
     return err
   }
-
-  for _, name := range files.Names {
-    path := files.Paths[name]
-    if tplType := templateTypeOf(path); tplType == contentType {
-      data, err := recurseTemplates(files, data, name)
-      if err != nil {
-        return err
-      }
-
-      var tpl *template.Template
-
-      for _, parent := range data[name].extends {
-        if tpl == nil {
-          tpl, err = template.New(parent).Funcs(c.funcs).Parse(string(data[parent].content))
-          if err != nil {
-            return err
-          }
-        } else {
-          _, err = tpl.New(parent).Parse(string(data[parent].content))
-          if err != nil {
-            return err
-          }
-        }
-      }
-
-      if tpl == nil {
-        tpl, err = template.New(name).Funcs(c.funcs).Parse(string(data[name].content))
-        if err != nil {
-          return err
-        }
-      } else {
-        _, err = tpl.New(name).Parse(string(data[name].content))
-        if err != nil {
-          return err
-        }
-      }
-
-      for _, included := range data[name].includes {
-        _, err = tpl.New(included).Parse(string(data[included].content))
-        if err != nil {
-          return err
-        }
-      }
-
-      c.templates[strings.ToLower(name)] = tpl
-    }
+  c.templates = make(map[string]*template.Template)
+  for name, tc := range tcs {
+    c.templates[name] = tc.(textTemplateCreator).template
   }
-
   return nil
+}
+
+type textTemplateCreator struct {
+  template *template.Template
+}
+
+func (tc textTemplateCreator) Create(name, content string, funcs map[string]interface{}) (templateCreator, error) {
+  var tmpl *template.Template
+  var err error
+  if tc.template != nil {
+    tmpl, err = tc.template.New(name).Parse(content)
+  } else {
+    tmpl, err = template.New(name).Funcs(funcs).Parse(content)
+  }
+  if err != nil {
+    return textTemplateCreator{}, err
+  }
+  return textTemplateCreator{template: tmpl}, nil
 }
