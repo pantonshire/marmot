@@ -63,51 +63,49 @@ func (c *textCache) load(fc FileCollection) error {
 
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := templateTypeOf(path); tplType != contentType {
-      return nil
-    }
+    if tplType := templateTypeOf(path); tplType == contentType {
+      data, err := recurseTemplates(files, data, name)
+      if err != nil {
+        return err
+      }
 
-    data, err := recurseTemplates(files, data, name)
-    if err != nil {
-      return err
-    }
+      var tpl *template.Template
 
-    var tpl *template.Template
+      for _, parent := range data[name].extends {
+        if tpl == nil {
+          tpl, err = template.New(parent).Funcs(c.funcs).Parse(string(data[parent].content))
+          if err != nil {
+            return err
+          }
+        } else {
+          _, err = tpl.New(parent).Parse(string(data[parent].content))
+          if err != nil {
+            return err
+          }
+        }
+      }
 
-    for _, parent := range data[name].extends {
       if tpl == nil {
-        tpl, err = template.New(parent).Funcs(c.funcs).Parse(string(data[parent].content))
+        tpl, err = template.New(name).Funcs(c.funcs).Parse(string(data[name].content))
         if err != nil {
           return err
         }
       } else {
-        _, err = tpl.New(parent).Parse(string(data[parent].content))
+        _, err = tpl.New(name).Parse(string(data[name].content))
         if err != nil {
           return err
         }
       }
-    }
 
-    if tpl == nil {
-      tpl, err = template.New(name).Funcs(c.funcs).Parse(string(data[name].content))
-      if err != nil {
-        return err
+      for _, included := range data[name].includes {
+        _, err = tpl.New(included).Parse(string(data[included].content))
+        if err != nil {
+          return err
+        }
       }
-    } else {
-      _, err = tpl.New(name).Parse(string(data[name].content))
-      if err != nil {
-        return err
-      }
-    }
 
-    for _, included := range data[name].includes {
-      _, err = tpl.New(included).Parse(string(data[included].content))
-      if err != nil {
-        return err
-      }
+      c.templates[strings.ToLower(name)] = tpl
     }
-
-    c.templates[strings.ToLower(name)] = tpl
   }
 
   return nil
