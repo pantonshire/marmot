@@ -8,50 +8,50 @@ import (
   "text/template"
 )
 
-type TextCache struct {
+type textCache struct {
   lock      sync.RWMutex
   templates map[string]*template.Template
   funcs     template.FuncMap
 }
 
-func Text() *TextCache {
-  return &TextCache{
+func TextCache() Cache {
+  return &textCache{
     templates: make(map[string]*template.Template),
     funcs:     make(template.FuncMap),
   }
 }
 
-func (c *TextCache) Load(fc FileCollection) error {
+func (c *textCache) Load(fc FileCollection) error {
   c.lock.Lock()
   defer c.lock.Unlock()
   return c.load(fc)
 }
 
-func (c *TextCache) Functions(funcs map[string]interface{}) {
+func (c *textCache) Functions(funcs map[string]interface{}) {
   for key, fn := range funcs {
     c.funcs[key] = fn
   }
 }
 
-func (c *TextCache) Builder(key string) *Builder {
+func (c *textCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
 
-func (c *TextCache) exec(w io.Writer, key string, data map[string]interface{}) error {
+func (c *textCache) exec(w io.Writer, key string, data map[string]interface{}) error {
   if tpl, ok := c.lookup(key); ok {
     return tpl.Execute(w, data)
   }
   return fmt.Errorf("template %s not found", key)
 }
 
-func (c *TextCache) lookup(key string) (*template.Template, bool) {
+func (c *textCache) lookup(key string) (*template.Template, bool) {
   c.lock.RLock()
   defer c.lock.RUnlock()
   tpl, ok := c.templates[strings.ToLower(key)]
   return tpl, ok
 }
 
-func (c *TextCache) load(fc FileCollection) error {
+func (c *textCache) load(fc FileCollection) error {
   c.templates = make(map[string]*template.Template)
 
   data := make(map[string]*tpldata)

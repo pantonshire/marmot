@@ -8,7 +8,7 @@ import (
 func TestText(t *testing.T) {
   expect := `Hello! The small robot of the day is Teabot. 1 + 1 = 2`
 
-  cache := Text()
+  cache := TextCache()
   cache.Functions(Std())
 
   if err := cache.Load(DirExtensions("testdata/text", "tmpl")); err != nil {
