@@ -63,7 +63,7 @@ func (c *HTMLCache) load(fc FileCollection) error {
 
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := files.TemplateTypeOf(path); tplType != ContentType {
+    if tplType := templateTypeOf(path); tplType != contentType {
       return nil
     }
 

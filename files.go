@@ -11,17 +11,16 @@ import (
   "unicode/utf8"
 )
 
-type TemplateType int
+type templateType int
 
 const (
-  ContentType  TemplateType = iota
-  SkeletonType TemplateType = iota
+  contentType  templateType = iota
+  skeletonType templateType = iota
 )
 
 type FileCollection interface {
   Resolve() (ResolvedFileCollection, error)
   Read(path string) ([]byte, error)
-  TemplateTypeOf(path string) TemplateType
 }
 
 type ResolvedFileCollection struct {
@@ -43,8 +42,15 @@ type Directory struct {
   pattern *regexp.Regexp
 }
 
+func newDirectory(path string, pattern *regexp.Regexp) Directory {
+  return Directory{
+    path:    filepath.Clean(path),
+    pattern: pattern,
+  }
+}
+
 func DirAll(path string) Directory {
-  return Directory{path: path}
+  return newDirectory(path, nil)
 }
 
 func DirMatch(path string, pattern string) Directory {
@@ -52,7 +58,7 @@ func DirMatch(path string, pattern string) Directory {
   if pattern != "" {
     r = regexp.MustCompile(fmt.Sprintf(`^%s$`, pattern))
   }
-  return Directory{path: path, pattern: r}
+  return newDirectory(path, r)
 }
 
 func DirExtensions(path string, extensions ...string) Directory {
@@ -93,7 +99,7 @@ func (d Directory) Resolve() (ResolvedFileCollection, error) {
     if err != nil {
       return err
     }
-    name := filepath.ToSlash(strings.TrimSuffix(rel, filepath.Ext(rel)))
+    name := relPathTemplateName(rel)
     if dup, ok := paths[name]; ok {
       return fmt.Errorf("duplicate template name %s used by both %s and %s", name, dup, path)
     }
@@ -101,16 +107,62 @@ func (d Directory) Resolve() (ResolvedFileCollection, error) {
     names = append(names, name)
     return nil
   })
+  if err != nil {
+    return ResolvedFileCollection{}, err
+  }
   return ResolvedFileCollection{
     FileCollection: d,
     Names:          names,
     Paths:          paths,
-  }, err
+  }, nil
 }
 
-func (d Directory) TemplateTypeOf(path string) TemplateType {
-  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
-    return ContentType
+type PathList struct {
+  root  string
+  paths []string
+}
+
+func Paths(root string, paths ...string) PathList {
+  pl := PathList{
+    root:  filepath.Clean(root),
+    paths: make([]string, len(paths)),
   }
-  return SkeletonType
+  for i, path := range paths {
+    pl.paths[i] = filepath.Clean(path)
+  }
+  return pl
+}
+
+func (pl PathList) Read(path string) ([]byte, error) {
+  return ioutil.ReadFile(path)
+}
+
+func (pl PathList) Resolve() (ResolvedFileCollection, error) {
+  var names []string
+  paths := make(map[string]string)
+  for _, path := range pl.paths {
+    name := relPathTemplateName(path)
+    if dup, ok := paths[name]; ok {
+      return ResolvedFileCollection{},
+        fmt.Errorf("duplicate template name %s used by both %s and %s", name, dup, path)
+    }
+    paths[name] = filepath.Join(pl.root, path)
+    names = append(names, name)
+  }
+  return ResolvedFileCollection{
+    FileCollection: pl,
+    Names:          names,
+    Paths:          paths,
+  }, nil
+}
+
+func relPathTemplateName(path string) string {
+  return filepath.ToSlash(strings.TrimSuffix(path, filepath.Ext(path)))
+}
+
+func templateTypeOf(path string) templateType {
+  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
+    return contentType
+  }
+  return skeletonType
 }
