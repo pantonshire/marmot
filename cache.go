@@ -42,7 +42,7 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
             return nil, err
           }
         } else {
-          _, err = tpl.Create(parent, string(data[parent].content), nil)
+          _, err = tpl.Create(parent, string(data[parent].content), funcs)
           if err != nil {
             return nil, err
           }
@@ -55,14 +55,14 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
           return nil, err
         }
       } else {
-        _, err = tpl.Create(name, string(data[name].content), nil)
+        _, err = tpl.Create(name, string(data[name].content), funcs)
         if err != nil {
           return nil, err
         }
       }
 
       for _, included := range data[name].includes {
-        _, err = tpl.Create(included, string(data[included].content), nil)
+        _, err = tpl.Create(included, string(data[included].content), funcs)
         if err != nil {
           return nil, err
         }
