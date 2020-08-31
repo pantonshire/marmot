@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-  cache := marmot.HTML()
+  cache := marmot.HTMLCache()
   
   //Load all of the templates in the directory templates/ with the extension .gohtml
   if err := cache.Load(marmot.DirExtensions("templates", "gohtml")); err != nil {

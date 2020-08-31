@@ -19,7 +19,7 @@ func TestHTML(t *testing.T) {
 </body>
 </html>`)
 
-  cache := HTML()
+  cache := HTMLCache()
 
   if err := cache.Load(DirExtensions("testdata/html", "gohtml")); err != nil {
     t.Error(err)
