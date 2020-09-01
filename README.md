@@ -1,7 +1,7 @@
 # Marmot
-Wrapper providing caching and inheritance for text/template and html/template
+Marmot provides inheritance and caching for text/template and html/template.
 
-## Usage
+## Examples
 ### Loading template files
 ```go
 package main
@@ -36,7 +36,7 @@ func main() {
 ```
 
 ### Templates from strings
-[Try in the Go playground](https://play.golang.org/p/uKmINp7pHFv)
+[Try in the Go playground](https://play.golang.org/p/c_bWx5iZGTU)
 
 ```go
 package main
@@ -50,8 +50,8 @@ func main() {
   cache := marmot.TextCache()
   
   templates := map[string][]byte {
-    "base":    []byte(`The {{template "jumper" .}} jumps over the lazy dog`),
-    "Example": []byte(`{{extend "base"}} {{define "jumper"}}{{.Adj1}} {{.Adj2}} {{.Noun}}{{end}}`),
+    "base.tmpl":    []byte(`The {{template "jumper" .}} jumps over the lazy dog`),
+    "Example.tmpl": []byte(`{{extend "base"}} {{define "jumper"}}{{.Adj1}} {{.Adj2}} {{.Noun}}{{end}}`),
   }
   
   if err := cache.Load(marmot.PreloadedFiles(templates)); err != nil {
@@ -71,7 +71,6 @@ func main() {
   //The quick brown fox jumps over the lazy dog
   fmt.Println(str)
 }
-
 ```
 
 ## License
