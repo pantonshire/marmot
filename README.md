@@ -2,6 +2,7 @@
 Wrapper providing caching and inheritance for text/template and html/template
 
 ## Usage
+### Loading template files
 ```go
 package main
 
