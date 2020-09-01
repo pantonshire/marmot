@@ -35,5 +35,44 @@ func main() {
 }
 ```
 
+### Templates from strings
+[Try in the Go playground](https://play.golang.org/p/uKmINp7pHFv)
+
+```go
+package main
+
+import (
+  "fmt"
+  "github.com/pantonshire/marmot"
+)
+
+func main() {
+  cache := marmot.TextCache()
+  
+  templates := map[string][]byte {
+    "base":    []byte(`The {{template "jumper" .}} jumps over the lazy dog`),
+    "Example": []byte(`{{extend "base"}} {{define "jumper"}}{{.Adj1}} {{.Adj2}} {{.Noun}}{{end}}`),
+  }
+  
+  if err := cache.Load(marmot.PreloadedFiles(templates)); err != nil {
+    panic(err)
+  }
+  
+  builder := cache.Builder("Example").
+    With("Adj1", "quick").
+    With("Adj2", "brown").
+    With("Noun", "fox")
+  
+  str, err := builder.ExecStr()
+  if err != nil {
+    panic(err)
+  }
+  
+  //The quick brown fox jumps over the lazy dog
+  fmt.Println(str)
+}
+
+```
+
 ## License
 [The MIT License](./LICENSE)
