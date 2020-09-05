@@ -127,16 +127,13 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
 }
 
 func (d directory) match(path string) bool {
-  if len(d.patterns) == 0 {
-    return true
-  }
   slashPath := filepath.ToSlash(path)
   for _, pattern := range d.patterns {
-    if pattern.MatchString(slashPath) {
-      return true
+    if !pattern.MatchString(slashPath) {
+      return false
     }
   }
-  return false
+  return true
 }
 
 type pathList struct {
