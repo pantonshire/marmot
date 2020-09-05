@@ -30,13 +30,16 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
       if err != nil {
         return nil, err
       }
-      var templateStack []string
+      templateStack, i := make([]string, 1 + len(data[name].extends) + len(data[name].includes)), 0
       for _, parent := range data[name].extends {
-        templateStack = append(templateStack, parent)
+        templateStack[i] = parent
+        i++
       }
-      templateStack = append(templateStack, name)
+      templateStack[i] = name
+      i++
       for _, included := range data[name].includes {
-        templateStack = append(templateStack, included)
+        templateStack[i] = included
+        i++
       }
       tpl, err := root.Create(templateStack[0], string(data[templateStack[0]].content), funcs)
       if err != nil {
