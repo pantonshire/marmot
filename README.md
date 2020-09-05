@@ -7,7 +7,7 @@ Marmot provides inheritance and caching for text/template and html/template.
 package main
 
 import (
-  "fmt"
+  "os"
   "github.com/pantonshire/marmot"
 )
 
@@ -25,13 +25,10 @@ func main() {
   
   //The values can be accessed inside the template as {{$.Answer}} and {{$.ProductName}}
   builder.With("Answer", 42).With("ProductName", "Sandwich")
-  
-  str, err := builder.ExecStr()
-  if err != nil {
+
+  if err := builder.Exec(os.Stdout); err != nil {
     panic(err)
   }
-  
-  fmt.Println(str)
 }
 ```
 
