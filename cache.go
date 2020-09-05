@@ -45,8 +45,8 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
       if err != nil {
         return nil, err
       }
-      for i := 1; i < len(templateStack); i++ {
-        _, err := tpl.Create(templateStack[i], string(data[templateStack[i]].content), nil)
+      for j := 1; j < len(templateStack); j++ {
+        _, err := tpl.Create(templateStack[j], string(data[templateStack[j]].content), nil)
         if err != nil {
           return nil, err
         }
