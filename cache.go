@@ -19,12 +19,10 @@ type templateCreator interface {
 func createTemplates(fc FileCollection, root templateCreator, funcs map[string]interface{}) (map[string]templateCreator, error) {
   tcs := make(map[string]templateCreator)
   data := make(map[string]*tpldata)
-
   files, err := fc.Resolve()
   if err != nil {
     return nil, err
   }
-
   for _, name := range files.Names {
     path := files.Paths[name]
     if tplType := templateTypeOf(path); tplType == contentType {
@@ -32,45 +30,26 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
       if err != nil {
         return nil, err
       }
-
-      var tpl templateCreator
-
+      var templateStack []string
       for _, parent := range data[name].extends {
-        if tpl == nil {
-          tpl, err = root.Create(parent, string(data[parent].content), funcs)
-          if err != nil {
-            return nil, err
-          }
-        } else {
-          _, err = tpl.Create(parent, string(data[parent].content), funcs)
-          if err != nil {
-            return nil, err
-          }
-        }
+        templateStack = append(templateStack, parent)
       }
-
-      if tpl == nil {
-        tpl, err = root.Create(name, string(data[name].content), funcs)
-        if err != nil {
-          return nil, err
-        }
-      } else {
-        _, err = tpl.Create(name, string(data[name].content), funcs)
-        if err != nil {
-          return nil, err
-        }
-      }
-
+      templateStack = append(templateStack, name)
       for _, included := range data[name].includes {
-        _, err = tpl.Create(included, string(data[included].content), funcs)
+        templateStack = append(templateStack, included)
+      }
+      tpl, err := root.Create(templateStack[0], string(data[templateStack[0]].content), funcs)
+      if err != nil {
+        return nil, err
+      }
+      for i := 1; i < len(templateStack); i++ {
+        _, err := tpl.Create(templateStack[i], string(data[templateStack[i]].content), nil)
         if err != nil {
           return nil, err
         }
       }
-
       tcs[strings.ToLower(name)] = tpl
     }
   }
-
   return tcs, nil
 }
