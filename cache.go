@@ -25,7 +25,7 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
   }
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := templateTypeOf(path); tplType == contentType {
+    if tplType := templateTypeOf(path); tplType == exported {
       data, err := recurseTemplates(files, data, name)
       if err != nil {
         return nil, err
