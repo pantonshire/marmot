@@ -53,16 +53,22 @@ func Directory(path string) Dir {
   return directory{path: filepath.Clean(path)}
 }
 
+// Files in the directory will be matched if the specified pattern appears anywhere in the file's path.
+// The paths checked against this pattern will be cleaned paths in slash format relative to the directory.
 func (d directory) PartialMatch(pattern *regexp.Regexp) Dir {
   d.patterns = append(d.patterns, pattern)
   return d
 }
 
+// Files in the directory will be matched if the entire path conforms to the specified pattern.
+// The paths checked against this pattern will be cleaned paths in slash format relative to the directory.
 func (d directory) FullMatch(pattern *regexp.Regexp) Dir {
   d.patterns = append(d.patterns, regexp.MustCompile(fmt.Sprintf("^%s$", pattern.String())))
   return d
 }
 
+// Files in the directory will be matched if they have any of the given extensions.
+// The extensions should exclude the leading dot.
 func (d directory) MatchExtensions(extensions ...string) Dir {
   if len(extensions) == 0 {
     return d
@@ -95,12 +101,12 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
       return nil
     }
     path = filepath.Clean(path)
-    if !d.match(path) {
-      return nil
-    }
     rel, err := filepath.Rel(d.path, path)
     if err != nil {
       return err
+    }
+    if !d.match(rel) {
+      return nil
     }
     name := relPathTemplateName(rel)
     if dup, ok := paths[name]; ok {
