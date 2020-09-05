@@ -37,33 +37,35 @@ func (fc ResolvedFileCollection) Read(name string) ([]byte, error) {
   return fc.FileCollection.Read(path)
 }
 
+type Dir interface {
+  FileCollection
+  PartialMatch(pattern *regexp.Regexp) Dir
+  FullMatch(pattern *regexp.Regexp) Dir
+  MatchExtensions(extensions ...string) Dir
+}
+
 type directory struct {
-  path    string
-  pattern *regexp.Regexp
+  path     string
+  patterns []*regexp.Regexp
 }
 
-func newDirectory(path string, pattern *regexp.Regexp) directory {
-  return directory{
-    path:    filepath.Clean(path),
-    pattern: pattern,
-  }
+func Directory(path string) Dir {
+  return directory{path: filepath.Clean(path)}
 }
 
-func DirAll(path string) FileCollection {
-  return newDirectory(path, nil)
+func (d directory) PartialMatch(pattern *regexp.Regexp) Dir {
+  d.patterns = append(d.patterns, pattern)
+  return d
 }
 
-func DirMatch(path string, pattern string) FileCollection {
-  var r *regexp.Regexp
-  if pattern != "" {
-    r = regexp.MustCompile(fmt.Sprintf(`^%s$`, pattern))
-  }
-  return newDirectory(path, r)
+func (d directory) FullMatch(pattern *regexp.Regexp) Dir {
+  d.patterns = append(d.patterns, regexp.MustCompile(fmt.Sprintf("^%s$", pattern.String())))
+  return d
 }
 
-func DirExtensions(path string, extensions ...string) FileCollection {
+func (d directory) MatchExtensions(extensions ...string) Dir {
   if len(extensions) == 0 {
-    return DirAll(path)
+    return d
   }
   escapedExtensions := make([]string, len(extensions))
   for i, extension := range extensions {
@@ -75,7 +77,8 @@ func DirExtensions(path string, extensions ...string) FileCollection {
   } else {
     pattern = fmt.Sprintf(`.*\.%s`, escapedExtensions[0])
   }
-  return DirMatch(path, pattern)
+  d.patterns = append(d.patterns, regexp.MustCompile(pattern))
+  return d
 }
 
 func (d directory) Read(path string) ([]byte, error) {
@@ -92,7 +95,7 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
       return nil
     }
     path = filepath.Clean(path)
-    if d.pattern != nil && !d.pattern.MatchString(filepath.ToSlash(path)) {
+    if !d.match(path) {
       return nil
     }
     rel, err := filepath.Rel(d.path, path)
@@ -115,6 +118,19 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
     Names:          names,
     Paths:          paths,
   }, nil
+}
+
+func (d directory) match(path string) bool {
+  if len(d.patterns) == 0 {
+    return true
+  }
+  slashPath := filepath.ToSlash(path)
+  for _, pattern := range d.patterns {
+    if pattern.MatchString(slashPath) {
+      return true
+    }
+  }
+  return false
 }
 
 type pathList struct {

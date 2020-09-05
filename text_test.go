@@ -12,7 +12,7 @@ func TestText(t *testing.T) {
     expect   string
   }{
     {
-      DirExtensions("testdata/text", "tmpl"),
+      Directory("testdata/text").MatchExtensions("tmpl"),
       "smolbotbot",
       `Hello! The small robot of the day is Teabot. 1 + 1 = 2`,
     },
