@@ -11,6 +11,7 @@ import (
 type Cache interface {
   Load(FileCollection) error
   WithFuncs(FuncMap) Cache
+  WithExportRule(ExportRule) Cache
   Builder(key string) *Builder
   exec(w io.Writer, key string, data DataMap) error
   exportRule() ExportRule

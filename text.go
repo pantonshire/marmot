@@ -35,6 +35,11 @@ func (c *textCache) WithFuncs(funcs FuncMap) Cache {
   return c
 }
 
+func (c *textCache) WithExportRule(rule ExportRule) Cache {
+  c.export = rule
+  return c
+}
+
 func (c *textCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
