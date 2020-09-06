@@ -11,13 +11,6 @@ import (
   "unicode/utf8"
 )
 
-type templateType bool
-
-const (
-  exported   templateType = true
-  unexported templateType = false
-)
-
 type FileCollection interface {
   Resolve() (ResolvedFileCollection, error)
   Read(path string) ([]byte, error)
@@ -213,11 +206,11 @@ func relPathTemplateName(path string) string {
   return filepath.ToSlash(strings.TrimSuffix(path, filepath.Ext(path)))
 }
 
-func templateTypeOf(path string) templateType {
+func templateTypeOf(path string) TemplateType {
   if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
-    return exported
+    return Exported
   }
-  return unexported
+  return Unexported
 }
 
 func errDuplicateTemplate(name, dup1, dup2 string) error {

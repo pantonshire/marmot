@@ -16,6 +16,13 @@ type templateCreator interface {
   Create(name, content string, funcs map[string]interface{}) (templateCreator, error)
 }
 
+type TemplateType bool
+
+const (
+  Exported   TemplateType = true
+  Unexported TemplateType = false
+)
+
 func createTemplates(fc FileCollection, root templateCreator, funcs map[string]interface{}) (map[string]templateCreator, error) {
   tcs := make(map[string]templateCreator)
   data := make(map[string]*tpldata)
@@ -25,7 +32,7 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
   }
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := templateTypeOf(path); tplType == exported {
+    if tplType := templateTypeOf(path); tplType == Exported {
       data, err := recurseTemplates(files, data, name)
       if err != nil {
         return nil, err
