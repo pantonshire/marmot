@@ -9,11 +9,35 @@ import (
 )
 
 type Cache interface {
+  // Loads all of the templates in the given FileCollection, resolving any inheritance hierarchies between templates.
+  //
+  // A template can extend another using {{extend "parent"}} and can include other templates using
+  // {{include "tmpl1 tmpl2 ..."}}. An argument to extend or include should be the template's path minus its
+  // extension. If the FileCollection is a Dir, then the paths should be relative to the path of the Dir.
+  //
+  // Once this function returns, any exported templates in the FileCollection can be executed via Cache.Builder.
+  // By default, exported templates are ones whose file name begins with a capital letter, but this behaviour can be
+  // overridden using Cache.WithExportRule.
   Load(FileCollection) error
+  
   WithFuncs(FuncMap) Cache
+
+  // Specifies a custom export rule that is used to determine whether templates are exported or not; exported
+  // templates can be executed via Cache.Builder, while unexported templates' only purpose is to be inherited from.
   WithExportRule(ExportRule) Cache
+
   CaseSensitive() Cache
+
+  // Creates a new Builder for the template indexed by the given key.
+  //
+  // The key is the template's path minus its extension. If the FileCollection used to load the templates was a Dir,
+  // then the paths should be relative to the path of the Dir. By default, the key is case insensitive.
+  //
+  // For example, if you have a template templates/customer/Checkout.gohtml:
+  //  _ = cache.Load(marmot.Directory("templates"))
+  //  builder := cache.Builder("customer/checkout")
   Builder(key string) *Builder
+
   exec(w io.Writer, key string, data DataMap) error
   exportRule() ExportRule
   functions() FuncMap

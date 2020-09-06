@@ -48,6 +48,7 @@ func parseDependencies(dependencyStatement string) []string {
   return dependencies
 }
 
+// TODO: respect cache's case sensitivity
 func recurseTemplates(fc ResolvedFileCollection, data map[string]*tpldata, name string) (map[string]*tpldata, error) {
   if _, ok := data[name]; ok {
     return data, nil
