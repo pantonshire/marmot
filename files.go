@@ -9,6 +9,8 @@ import (
   "strings"
 )
 
+// A FileCollection is something which can be used to generate a list of file paths.
+// Marmot provides three implementations: Directory, Paths and PreloadedFiles.
 type FileCollection interface {
   Resolve() (ResolvedFileCollection, error)
   Read(path string) ([]byte, error)
@@ -40,6 +42,7 @@ type directory struct {
   patterns []*regexp.Regexp
 }
 
+// Creates a new FileCollection which walks the specified directory in order to generate a list of file paths.
 func Directory(path string) Dir {
   return directory{path: filepath.Clean(path)}
 }
