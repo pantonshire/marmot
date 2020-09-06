@@ -3,12 +3,45 @@ Marmot provides inheritance and caching for text/template and html/template.
 
 ## Examples
 ### Loading template files
+Template `templates/MyTemplate.gohtml`:
+```html
+{{extend "base"}}
+{{include "products"}}
+
+{{define "title" -}}
+    The answer to life, the universe and everything is {{.Answer}}
+{{- end}}
+
+{{define "content"}}
+    <h1>Products</h1>
+    {{template "product" .ProductName}}
+{{end}}
+```
+
+Template `templates/base.gohtml`:
+```html
+<html lang="en">
+<head>
+    <title>{{template "title" .}}</title>
+</head>
+<body>{{template "content" .}}</body>
+</html>
+```
+
+Template `templates/products.gohtml`:
+```html
+{{define "product" -}}
+    <p>A fine {{.}} for sale at a bargain price!</p>
+{{- end}}
+```
+
+Go code:
 ```go
 package main
 
 import (
-  "os"
   "github.com/pantonshire/marmot"
+  "os"
 )
 
 func main() {
@@ -33,6 +66,19 @@ func main() {
 }
 ```
 
+HTML output:
+```html
+<html lang="en">
+<head>
+    <title>The answer to life, the universe and everything is 42</title>
+</head>
+<body>
+    <h1>Products</h1>
+    <p>A fine Sandwich for sale at a bargain price!</p>
+</body>
+</html>
+```
+
 ### Templates from strings
 [Try in the Go playground](https://play.golang.org/p/c_bWx5iZGTU)
 
@@ -40,8 +86,8 @@ func main() {
 package main
 
 import (
-  "fmt"
   "github.com/pantonshire/marmot"
+  "os"
 )
 
 func main() {
@@ -61,13 +107,10 @@ func main() {
     With("Adj2", "brown").
     With("Noun", "fox")
   
-  str, err := builder.ExecStr()
-  if err != nil {
+  //The quick brown fox jumps over the lazy dog
+  if err := builder.Exec(os.Stdout); err != nil {
     panic(err)
   }
-  
-  //The quick brown fox jumps over the lazy dog
-  fmt.Println(str)
 }
 ```
 
