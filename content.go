@@ -43,6 +43,7 @@ func (b *Builder) With(key string, val interface{}) *Builder {
   return b
 }
 
+// Adds all of the entries in the given DataMap as values that can be referenced in the template.
 func (b *Builder) WithAll(data DataMap) *Builder {
   for key, val := range data {
     b.data[key] = val

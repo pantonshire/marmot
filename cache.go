@@ -14,8 +14,9 @@ type Cache interface {
   // Loads all of the templates in the given FileCollection, resolving any inheritance hierarchies between templates.
   //
   // A template can extend another using {{extend "parent"}} and can include other templates using
-  // {{include "tmpl1 tmpl2 ..."}}. An argument to extend or include should be the template's path minus its
-  // extension. If the FileCollection is a Dir, then the paths should be relative to the path of the Dir.
+  // {{include "tmpl1 tmpl2 ..."}}. An argument to extend or include should be the template's path in forward slash
+  // format minus its extension. If the FileCollection is a Dir, then the paths should be relative to the path of
+  // the Dir.
   //
   // Once this function returns, any exported templates in the FileCollection can be executed via Cache.Builder.
   // By default, exported templates are ones whose file name begins with a capital letter, but this behaviour can be
@@ -31,8 +32,8 @@ type Cache interface {
 
   // Creates a new Builder for the template indexed by the given key.
   //
-  // The key is the template's path minus its extension, case insensitive. If the FileCollection used to load the
-  // templates was a Dir, then the paths should be relative to the path of the Dir.
+  // The key is the template's path in forward slash format minus its extension, case insensitive. If the
+  // FileCollection used to load the templates was a Dir, then the paths should be relative to the path of the Dir.
   //
   // For example, if you have a template templates/customer/Checkout.gohtml:
   //  _ = cache.Load(marmot.Directory("templates"))
@@ -49,8 +50,17 @@ type templateCreator interface {
 }
 
 type FuncMap map[string]interface{}
+
+// A DataMap stores values to be passed to a template on execution, indexed by string keys. The template can use
+// the key to retrieve the value: {{$.key}}.
 type DataMap map[string]interface{}
+
+// A TemplateType is either Exported or Unexported.
+// This represents whether or not a template can be used by Cache.Builder.
 type TemplateType bool
+
+// An ExportRule is a function which takes a template's name (its path in forward slash format minus its extension)
+// and returns whether the template should be exported or not.
 type ExportRule func(name string) TemplateType
 
 const (

@@ -14,6 +14,7 @@ type textCache struct {
   export    ExportRule
 }
 
+// Returns a new cache which uses text/template.
 func TextCache() Cache {
   return &textCache{
     templates: make(map[string]*template.Template),

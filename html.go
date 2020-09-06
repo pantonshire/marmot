@@ -14,6 +14,7 @@ type htmlCache struct {
   export    ExportRule
 }
 
+// Returns a new cache which uses html/template.
 func HTMLCache() Cache {
   return &htmlCache{
     templates: make(map[string]*template.Template),
