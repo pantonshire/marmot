@@ -8,6 +8,8 @@ import (
   "unicode/utf8"
 )
 
+// Responsible for loading and storing a collection of templates, and creating Builder structs which are used to
+// execute the templates as necessary.
 type Cache interface {
   // Loads all of the templates in the given FileCollection, resolving any inheritance hierarchies between templates.
   //
@@ -19,19 +21,18 @@ type Cache interface {
   // By default, exported templates are ones whose file name begins with a capital letter, but this behaviour can be
   // overridden using Cache.WithExportRule.
   Load(FileCollection) error
-  
+
+  // Specifies a collection of functions which can be used in the templates.
   WithFuncs(FuncMap) Cache
 
   // Specifies a custom export rule that is used to determine whether templates are exported or not; exported
   // templates can be executed via Cache.Builder, while unexported templates' only purpose is to be inherited from.
   WithExportRule(ExportRule) Cache
 
-  CaseSensitive() Cache
-
   // Creates a new Builder for the template indexed by the given key.
   //
-  // The key is the template's path minus its extension. If the FileCollection used to load the templates was a Dir,
-  // then the paths should be relative to the path of the Dir. By default, the key is case insensitive.
+  // The key is the template's path minus its extension, case insensitive. If the FileCollection used to load the
+  // templates was a Dir, then the paths should be relative to the path of the Dir.
   //
   // For example, if you have a template templates/customer/Checkout.gohtml:
   //  _ = cache.Load(marmot.Directory("templates"))
@@ -41,7 +42,6 @@ type Cache interface {
   exec(w io.Writer, key string, data DataMap) error
   exportRule() ExportRule
   functions() FuncMap
-  caseSensitive() bool
 }
 
 type templateCreator interface {
@@ -54,7 +54,11 @@ type TemplateType bool
 type ExportRule func(name string) TemplateType
 
 const (
+  // Exported templates can be used by Cache.Builder.
   Exported   TemplateType = true
+
+  // Unexported templates cannot be used by Cache.Builder.
+  // Their only purpose is for other templates to inherit from them.
   Unexported TemplateType = false
 )
 
@@ -99,7 +103,7 @@ func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[
           return nil, err
         }
       }
-      tcs[cachedName(cache, name)] = tpl
+      tcs[templateKey(name)] = tpl
     }
   }
   return tcs, nil
@@ -112,10 +116,6 @@ func defaultExportRule(name string) TemplateType {
   return Unexported
 }
 
-func cachedName(cache Cache, name string) string {
-  if cache.caseSensitive() {
-    return name
-  } else {
-    return strings.ToLower(name)
-  }
+func templateKey(name string) string {
+  return strings.ToLower(name)
 }

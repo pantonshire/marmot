@@ -11,8 +11,7 @@ type htmlCache struct {
   lock      sync.RWMutex
   templates map[string]*template.Template
   funcs     template.FuncMap
-  export  ExportRule
-  caseStv bool
+  export    ExportRule
 }
 
 func HTMLCache() Cache {
@@ -40,11 +39,6 @@ func (c *htmlCache) WithExportRule(rule ExportRule) Cache {
   return c
 }
 
-func (c *htmlCache) CaseSensitive() Cache {
-  c.caseStv = true
-  return c
-}
-
 func (c *htmlCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
@@ -64,14 +58,10 @@ func (c *htmlCache) functions() FuncMap {
   return FuncMap(c.funcs)
 }
 
-func (c *htmlCache) caseSensitive() bool {
-  return c.caseStv
-}
-
 func (c *htmlCache) lookup(key string) (*template.Template, bool) {
   c.lock.RLock()
   defer c.lock.RUnlock()
-  tpl, ok := c.templates[cachedName(c, key)]
+  tpl, ok := c.templates[templateKey(key)]
   return tpl, ok
 }
 
