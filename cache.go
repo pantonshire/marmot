@@ -2,7 +2,7 @@ package marmot
 
 import (
   "io"
-  "path/filepath"
+  "path"
   "strings"
   "unicode"
   "unicode/utf8"
@@ -24,7 +24,7 @@ type templateCreator interface {
 type FuncMap map[string]interface{}
 type DataMap map[string]interface{}
 type TemplateType bool
-type ExportRule func(path string) TemplateType
+type ExportRule func(name string) TemplateType
 
 const (
   Exported   TemplateType = true
@@ -46,8 +46,7 @@ func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[
   }
   funcs := cache.functions()
   for _, name := range files.Names {
-    path := files.Paths[name]
-    if tplType := exportRule(path); tplType == Exported {
+    if tplType := exportRule(name); tplType == Exported {
       data, err := recurseTemplates(files, data, name)
       if err != nil {
         return nil, err
@@ -79,8 +78,8 @@ func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[
   return tcs, nil
 }
 
-func defaultExportRule(path string) TemplateType {
-  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
+func defaultExportRule(name string) TemplateType {
+  if r, _ := utf8.DecodeRuneInString(path.Base(name)); unicode.IsUpper(r) {
     return Exported
   }
   return Unexported
