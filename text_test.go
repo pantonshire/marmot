@@ -43,8 +43,7 @@ func TestText(t *testing.T) {
   }
 
   for _, testData := range tests {
-    cache := TextCache()
-    cache.Functions(Std())
+    cache := TextCache().WithFuncs(Std())
 
     if err := cache.Load(testData.fc); err != nil {
       t.Error(err)

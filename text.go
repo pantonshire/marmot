@@ -27,10 +27,11 @@ func (c *textCache) Load(fc FileCollection) error {
   return c.load(fc)
 }
 
-func (c *textCache) Functions(funcs map[string]interface{}) {
+func (c *textCache) WithFuncs(funcs map[string]interface{}) Cache {
   for key, fn := range funcs {
     c.funcs[key] = fn
   }
+  return c
 }
 
 func (c *textCache) Builder(key string) *Builder {
