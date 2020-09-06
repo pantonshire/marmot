@@ -38,12 +38,16 @@ func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[
   if err != nil {
     return nil, err
   }
+  var exportRule ExportRule
+  if customRule := cache.exportRule(); customRule != nil {
+    exportRule = customRule
+  } else {
+    exportRule = defaultExportRule
+  }
   funcs := cache.functions()
-  //var exportRule ExportRule
-  //if customRule :=
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := defaultExportRule(path); tplType == Exported {
+    if tplType := exportRule(path); tplType == Exported {
       data, err := recurseTemplates(files, data, name)
       if err != nil {
         return nil, err
