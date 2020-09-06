@@ -3,7 +3,6 @@ package marmot
 import (
   "fmt"
   "io"
-  "strings"
   "sync"
   "text/template"
 )
@@ -12,7 +11,8 @@ type textCache struct {
   lock      sync.RWMutex
   templates map[string]*template.Template
   funcs     template.FuncMap
-  export    ExportRule
+  export  ExportRule
+  caseStv bool
 }
 
 func TextCache() Cache {
@@ -40,6 +40,11 @@ func (c *textCache) WithExportRule(rule ExportRule) Cache {
   return c
 }
 
+func (c *textCache) CaseSensitive() Cache {
+  c.caseStv = true
+  return c
+}
+
 func (c *textCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
@@ -59,10 +64,14 @@ func (c *textCache) functions() FuncMap {
   return FuncMap(c.funcs)
 }
 
+func (c *textCache) caseSensitive() bool {
+  return c.caseStv
+}
+
 func (c *textCache) lookup(key string) (*template.Template, bool) {
   c.lock.RLock()
   defer c.lock.RUnlock()
-  tpl, ok := c.templates[strings.ToLower(key)]
+  tpl, ok := c.templates[cachedName(c, key)]
   return tpl, ok
 }
 

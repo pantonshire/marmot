@@ -12,10 +12,12 @@ type Cache interface {
   Load(FileCollection) error
   WithFuncs(FuncMap) Cache
   WithExportRule(ExportRule) Cache
+  CaseSensitive() Cache
   Builder(key string) *Builder
   exec(w io.Writer, key string, data DataMap) error
   exportRule() ExportRule
   functions() FuncMap
+  caseSensitive() bool
 }
 
 type templateCreator interface {
@@ -73,7 +75,7 @@ func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[
           return nil, err
         }
       }
-      tcs[strings.ToLower(name)] = tpl
+      tcs[cachedName(cache, name)] = tpl
     }
   }
   return tcs, nil
@@ -84,4 +86,12 @@ func defaultExportRule(name string) TemplateType {
     return Exported
   }
   return Unexported
+}
+
+func cachedName(cache Cache, name string) string {
+  if cache.caseSensitive() {
+    return name
+  } else {
+    return strings.ToLower(name)
+  }
 }
