@@ -2,42 +2,53 @@ package marmot
 
 import (
   "io"
+  "path/filepath"
   "strings"
+  "unicode"
+  "unicode/utf8"
 )
 
 type Cache interface {
-  Load(fc FileCollection) error
-  WithFuncs(funcs map[string]interface{}) Cache
+  Load(FileCollection) error
+  WithFuncs(FuncMap) Cache
   Builder(key string) *Builder
-  exec(w io.Writer, key string, data map[string]interface{}) error
+  exec(w io.Writer, key string, data DataMap) error
+  exportRule() ExportRule
+  functions() FuncMap
 }
 
 type templateCreator interface {
-  Create(name, content string, funcs map[string]interface{}) (templateCreator, error)
+  Create(name, content string, funcs FuncMap) (templateCreator, error)
 }
 
+type FuncMap map[string]interface{}
+type DataMap map[string]interface{}
 type TemplateType bool
+type ExportRule func(path string) TemplateType
 
 const (
   Exported   TemplateType = true
   Unexported TemplateType = false
 )
 
-func createTemplates(fc FileCollection, root templateCreator, funcs map[string]interface{}) (map[string]templateCreator, error) {
+func createTemplates(cache Cache, fc FileCollection, root templateCreator) (map[string]templateCreator, error) {
   tcs := make(map[string]templateCreator)
   data := make(map[string]*tpldata)
   files, err := fc.Resolve()
   if err != nil {
     return nil, err
   }
+  funcs := cache.functions()
+  //var exportRule ExportRule
+  //if customRule :=
   for _, name := range files.Names {
     path := files.Paths[name]
-    if tplType := templateTypeOf(path); tplType == Exported {
+    if tplType := defaultExportRule(path); tplType == Exported {
       data, err := recurseTemplates(files, data, name)
       if err != nil {
         return nil, err
       }
-      templateStack, i := make([]string, 1 + len(data[name].extends) + len(data[name].includes)), 0
+      templateStack, i := make([]string, 1+len(data[name].extends)+len(data[name].includes)), 0
       for _, parent := range data[name].extends {
         templateStack[i] = parent
         i++
@@ -62,4 +73,11 @@ func createTemplates(fc FileCollection, root templateCreator, funcs map[string]i
     }
   }
   return tcs, nil
+}
+
+func defaultExportRule(path string) TemplateType {
+  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
+    return Exported
+  }
+  return Unexported
 }

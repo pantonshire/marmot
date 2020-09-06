@@ -12,6 +12,7 @@ type htmlCache struct {
   lock      sync.RWMutex
   templates map[string]*template.Template
   funcs     template.FuncMap
+  export    ExportRule
 }
 
 func HTMLCache() Cache {
@@ -27,7 +28,7 @@ func (c *htmlCache) Load(fc FileCollection) error {
   return c.load(fc)
 }
 
-func (c *htmlCache) WithFuncs(funcs map[string]interface{}) Cache {
+func (c *htmlCache) WithFuncs(funcs FuncMap) Cache {
   for key, fn := range funcs {
     c.funcs[key] = fn
   }
@@ -38,11 +39,19 @@ func (c *htmlCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
 
-func (c *htmlCache) exec(w io.Writer, key string, data map[string]interface{}) error {
+func (c *htmlCache) exec(w io.Writer, key string, data DataMap) error {
   if tpl, ok := c.lookup(key); ok {
     return tpl.Execute(w, data)
   }
   return fmt.Errorf("template %s not found", key)
+}
+
+func (c *htmlCache) exportRule() ExportRule {
+  return c.export
+}
+
+func (c *htmlCache) functions() FuncMap {
+  return FuncMap(c.funcs)
 }
 
 func (c *htmlCache) lookup(key string) (*template.Template, bool) {
@@ -53,7 +62,7 @@ func (c *htmlCache) lookup(key string) (*template.Template, bool) {
 }
 
 func (c *htmlCache) load(fc FileCollection) error {
-  tcs, err := createTemplates(fc, htmlTemplateCreator{}, c.funcs)
+  tcs, err := createTemplates(c, fc, htmlTemplateCreator{})
   if err != nil {
     return err
   }
@@ -68,13 +77,13 @@ type htmlTemplateCreator struct {
   template *template.Template
 }
 
-func (tc htmlTemplateCreator) Create(name, content string, funcs map[string]interface{}) (templateCreator, error) {
+func (tc htmlTemplateCreator) Create(name, content string, funcs FuncMap) (templateCreator, error) {
   var tmpl *template.Template
   var err error
   if tc.template != nil {
-    tmpl, err = tc.template.New(name).Funcs(funcs).Parse(content)
+    tmpl, err = tc.template.New(name).Parse(content)
   } else {
-    tmpl, err = template.New(name).Funcs(funcs).Parse(content)
+    tmpl, err = template.New(name).Funcs(template.FuncMap(funcs)).Parse(content)
   }
   if err != nil {
     return htmlTemplateCreator{}, err

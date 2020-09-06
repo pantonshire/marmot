@@ -12,6 +12,7 @@ type textCache struct {
   lock      sync.RWMutex
   templates map[string]*template.Template
   funcs     template.FuncMap
+  export    ExportRule
 }
 
 func TextCache() Cache {
@@ -27,7 +28,7 @@ func (c *textCache) Load(fc FileCollection) error {
   return c.load(fc)
 }
 
-func (c *textCache) WithFuncs(funcs map[string]interface{}) Cache {
+func (c *textCache) WithFuncs(funcs FuncMap) Cache {
   for key, fn := range funcs {
     c.funcs[key] = fn
   }
@@ -38,11 +39,19 @@ func (c *textCache) Builder(key string) *Builder {
   return &Builder{cache: c, key: key, data: make(map[string]interface{})}
 }
 
-func (c *textCache) exec(w io.Writer, key string, data map[string]interface{}) error {
+func (c *textCache) exec(w io.Writer, key string, data DataMap) error {
   if tpl, ok := c.lookup(key); ok {
     return tpl.Execute(w, data)
   }
   return fmt.Errorf("template %s not found", key)
+}
+
+func (c *textCache) exportRule() ExportRule {
+  return c.export
+}
+
+func (c *textCache) functions() FuncMap {
+  return FuncMap(c.funcs)
 }
 
 func (c *textCache) lookup(key string) (*template.Template, bool) {
@@ -53,7 +62,7 @@ func (c *textCache) lookup(key string) (*template.Template, bool) {
 }
 
 func (c *textCache) load(fc FileCollection) error {
-  tcs, err := createTemplates(fc, textTemplateCreator{}, c.funcs)
+  tcs, err := createTemplates(c, fc, textTemplateCreator{})
   if err != nil {
     return err
   }
@@ -68,13 +77,13 @@ type textTemplateCreator struct {
   template *template.Template
 }
 
-func (tc textTemplateCreator) Create(name, content string, funcs map[string]interface{}) (templateCreator, error) {
+func (tc textTemplateCreator) Create(name, content string, funcs FuncMap) (templateCreator, error) {
   var tmpl *template.Template
   var err error
   if tc.template != nil {
     tmpl, err = tc.template.New(name).Parse(content)
   } else {
-    tmpl, err = template.New(name).Funcs(funcs).Parse(content)
+    tmpl, err = template.New(name).Funcs(template.FuncMap(funcs)).Parse(content)
   }
   if err != nil {
     return textTemplateCreator{}, err

@@ -16,7 +16,7 @@ import (
 //  - (interval low high step): returns and array of ints [low, low+step, low+(2*step), ...], ending at the largest value less than high
 //  - (strfy x): converts any value x to a string. If x is a pointer then it is dereferenced first
 //  - (strfyf pattern x): like strfy, but formats the value according to the given pattern
-func Std() map[string]interface{} {
+func Std() FuncMap {
   return map[string]interface{}{
     "add":      stdAdd,
     "mul":      stdMul,

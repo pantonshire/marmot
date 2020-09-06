@@ -8,7 +8,7 @@ import (
 type Builder struct {
   cache Cache
   key   string
-  data  map[string]interface{}
+  data  DataMap
 }
 
 func (b *Builder) Exec(w io.Writer) error {
@@ -28,7 +28,7 @@ func (b *Builder) With(key string, val interface{}) *Builder {
   return b
 }
 
-func (b *Builder) WithAll(data map[string]interface{}) *Builder {
+func (b *Builder) WithAll(data DataMap) *Builder {
   for key, val := range data {
     b.data[key] = val
   }

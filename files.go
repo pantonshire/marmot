@@ -7,8 +7,6 @@ import (
   "path/filepath"
   "regexp"
   "strings"
-  "unicode"
-  "unicode/utf8"
 )
 
 type FileCollection interface {
@@ -204,13 +202,6 @@ func (d preloadedFiles) Resolve() (ResolvedFileCollection, error) {
 
 func relPathTemplateName(path string) string {
   return filepath.ToSlash(strings.TrimSuffix(path, filepath.Ext(path)))
-}
-
-func templateTypeOf(path string) TemplateType {
-  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
-    return Exported
-  }
-  return Unexported
 }
 
 func errDuplicateTemplate(name, dup1, dup2 string) error {
