@@ -17,7 +17,7 @@ func TestText(t *testing.T) {
       `Hello! The small robot of the day is Teabot. 1 + 1 = 2`,
     },
     {
-      PathList("testdata/text", "base.tmpl", "greeting.tmpl", "Smolbotbot.tmpl"),
+      Paths("testdata/text", "base.tmpl", "greeting.tmpl", "Smolbotbot.tmpl"),
       "smolbotbot",
       `Hello! The small robot of the day is Teabot. 1 + 1 = 2`,
     },

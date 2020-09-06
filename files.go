@@ -141,7 +141,7 @@ type pathList struct {
   paths []string
 }
 
-func PathList(root string, paths ...string) FileCollection {
+func Paths(root string, paths ...string) FileCollection {
   pl := pathList{
     root:  filepath.Clean(root),
     paths: make([]string, len(paths)),
