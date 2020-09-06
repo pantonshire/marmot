@@ -12,12 +12,12 @@ func TestText(t *testing.T) {
     expect   string
   }{
     {
-      DirExtensions("testdata/text", "tmpl"),
+      Directory("testdata/text").MatchExtensions("tmpl"),
       "smolbotbot",
       `Hello! The small robot of the day is Teabot. 1 + 1 = 2`,
     },
     {
-      PathList("testdata/text", "base.tmpl", "greeting.tmpl", "Smolbotbot.tmpl"),
+      Paths("testdata/text", "base.tmpl", "greeting.tmpl", "Smolbotbot.tmpl"),
       "smolbotbot",
       `Hello! The small robot of the day is Teabot. 1 + 1 = 2`,
     },
@@ -43,8 +43,7 @@ func TestText(t *testing.T) {
   }
 
   for _, testData := range tests {
-    cache := TextCache()
-    cache.Functions(Std())
+    cache := TextCache().WithFuncs(Std())
 
     if err := cache.Load(testData.fc); err != nil {
       t.Error(err)

@@ -7,15 +7,6 @@ import (
   "path/filepath"
   "regexp"
   "strings"
-  "unicode"
-  "unicode/utf8"
-)
-
-type templateType int
-
-const (
-  contentType  templateType = iota
-  skeletonType templateType = iota
 )
 
 type FileCollection interface {
@@ -37,33 +28,41 @@ func (fc ResolvedFileCollection) Read(name string) ([]byte, error) {
   return fc.FileCollection.Read(path)
 }
 
+type Dir interface {
+  FileCollection
+  PartialMatch(pattern *regexp.Regexp) Dir
+  FullMatch(pattern *regexp.Regexp) Dir
+  MatchExtensions(extensions ...string) Dir
+}
+
 type directory struct {
-  path    string
-  pattern *regexp.Regexp
+  path     string
+  patterns []*regexp.Regexp
 }
 
-func newDirectory(path string, pattern *regexp.Regexp) directory {
-  return directory{
-    path:    filepath.Clean(path),
-    pattern: pattern,
-  }
+func Directory(path string) Dir {
+  return directory{path: filepath.Clean(path)}
 }
 
-func DirAll(path string) FileCollection {
-  return newDirectory(path, nil)
+// Files in the directory will be matched if the specified pattern appears anywhere in the file's path.
+// The paths checked against this pattern will be cleaned paths in slash format relative to the directory.
+func (d directory) PartialMatch(pattern *regexp.Regexp) Dir {
+  d.patterns = append(d.patterns, pattern)
+  return d
 }
 
-func DirMatch(path string, pattern string) FileCollection {
-  var r *regexp.Regexp
-  if pattern != "" {
-    r = regexp.MustCompile(fmt.Sprintf(`^%s$`, pattern))
-  }
-  return newDirectory(path, r)
+// Files in the directory will be matched if the entire path conforms to the specified pattern.
+// The paths checked against this pattern will be cleaned paths in slash format relative to the directory.
+func (d directory) FullMatch(pattern *regexp.Regexp) Dir {
+  d.patterns = append(d.patterns, regexp.MustCompile(fmt.Sprintf("^%s$", pattern.String())))
+  return d
 }
 
-func DirExtensions(path string, extensions ...string) FileCollection {
+// Files in the directory will be matched if they have any of the given extensions.
+// The extensions should exclude the leading dot.
+func (d directory) MatchExtensions(extensions ...string) Dir {
   if len(extensions) == 0 {
-    return DirAll(path)
+    return d
   }
   escapedExtensions := make([]string, len(extensions))
   for i, extension := range extensions {
@@ -75,7 +74,8 @@ func DirExtensions(path string, extensions ...string) FileCollection {
   } else {
     pattern = fmt.Sprintf(`.*\.%s`, escapedExtensions[0])
   }
-  return DirMatch(path, pattern)
+  d.patterns = append(d.patterns, regexp.MustCompile(pattern))
+  return d
 }
 
 func (d directory) Read(path string) ([]byte, error) {
@@ -92,12 +92,12 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
       return nil
     }
     path = filepath.Clean(path)
-    if d.pattern != nil && !d.pattern.MatchString(filepath.ToSlash(path)) {
-      return nil
-    }
     rel, err := filepath.Rel(d.path, path)
     if err != nil {
       return err
+    }
+    if !d.match(rel) {
+      return nil
     }
     name := relPathTemplateName(rel)
     if dup, ok := paths[name]; ok {
@@ -117,12 +117,22 @@ func (d directory) Resolve() (ResolvedFileCollection, error) {
   }, nil
 }
 
+func (d directory) match(path string) bool {
+  slashPath := filepath.ToSlash(path)
+  for _, pattern := range d.patterns {
+    if !pattern.MatchString(slashPath) {
+      return false
+    }
+  }
+  return true
+}
+
 type pathList struct {
   root  string
   paths []string
 }
 
-func PathList(root string, paths ...string) FileCollection {
+func Paths(root string, paths ...string) FileCollection {
   pl := pathList{
     root:  filepath.Clean(root),
     paths: make([]string, len(paths)),
@@ -192,13 +202,6 @@ func (d preloadedFiles) Resolve() (ResolvedFileCollection, error) {
 
 func relPathTemplateName(path string) string {
   return filepath.ToSlash(strings.TrimSuffix(path, filepath.Ext(path)))
-}
-
-func templateTypeOf(path string) templateType {
-  if r, _ := utf8.DecodeRuneInString(filepath.Base(path)); unicode.IsUpper(r) {
-    return contentType
-  }
-  return skeletonType
 }
 
 func errDuplicateTemplate(name, dup1, dup2 string) error {
